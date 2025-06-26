@@ -9,36 +9,44 @@
   </style>
 </head>
 <body>
-  <script type="module">
-    import * as THREE from 'https://unpkg.com/three@0.154.0/build/three.module.js';
-    import { GLTFLoader } from 'https://unpkg.com/three@0.154.0/examples/jsm/loaders/GLTFLoader.js';
-
+  <!-- 使用非模块方式加载 three 和 GLTFLoader -->
+  <script src="https://cdn.jsdelivr.net/npm/three@0.154.0/build/three.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/three@0.154.0/examples/js/loaders/GLTFLoader.js"></script>
+  <script>
+    // 初始化场景、相机、渲染器
     const scene = new THREE.Scene();
     const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
     const renderer = new THREE.WebGLRenderer({ antialias: true });
     renderer.setSize(window.innerWidth, window.innerHeight);
     document.body.appendChild(renderer.domElement);
 
+    // 添加光源
     const light = new THREE.DirectionalLight(0xffffff, 1);
     light.position.set(5, 10, 7);
     scene.add(light);
-    scene.add(new THREE.AmbientLight(0x404040));
+    scene.add(new THREE.AmbientLight(0x404040)); // 柔光
 
-    const loader = new GLTFLoader();
-    loader.load('Z516print-v3.glb', function(gltf) {
-      scene.add(gltf.scene);
+    // 加载GLB模型
+    const loader = new GLTFLoader();  // ✅ 注意这里不是 THREE.GLTFLoader
+    loader.load('Z516print-v3.glb', function (gltf) {
+      const model = gltf.scene;
+      model.rotation.y = Math.PI; // 可选：调整初始朝向
+      scene.add(model);
+
       camera.position.z = 5;
+
+      // 动画循环
+      function animate() {
+        requestAnimationFrame(animate);
+        model.rotation.y += 0.005; // 模型缓慢旋转
+        renderer.render(scene, camera);
+      }
       animate();
-    }, undefined, function(error) {
-      console.error('加载 GLB 模型失败:', error);
+    }, undefined, function (error) {
+      console.error('模型加载失败:', error);
     });
 
-    function animate() {
-      requestAnimationFrame(animate);
-      scene.rotation.y += 0.005;
-      renderer.render(scene, camera);
-    }
-
+    // 响应窗口大小变化
     window.addEventListener('resize', () => {
       camera.aspect = window.innerWidth / window.innerHeight;
       camera.updateProjectionMatrix();
